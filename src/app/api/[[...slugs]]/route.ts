@@ -5,14 +5,17 @@ import { nanoid } from 'nanoid'
 const ROOM_TTL_SECONDS = 60 * 10
 
 const rooms = new Elysia({ prefix: '/room' })
-    .post('/create', async () => {
-        const roomId = nanoid()
 
-        await redis.hset(`meta: ${roomId}`, {
-            connected: [],
+    .post('/create', async () => {
+        const roomId = nanoid() // creating a roomId
+
+        // Storing data in redis under a meta
+        await redis.hset(`meta:${roomId}`, {
+            connected: ['Emon'],
             createdAt: Date.now(),
         })
 
+        // deleting the room after 10 minutes
         await redis.expire(`meta: ${roomId}`, ROOM_TTL_SECONDS)
 
         return { roomId }
