@@ -64,7 +64,7 @@ const Page = () => {
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-green-500 animate-pulse">
                         {">"}
                     </span>
-                    <input value={input} onKeyDown={(e) => {
+                    <input ref={inputRef} value={input} onKeyDown={(e) => {
                         if (e.key === "Enter" && input.trim()) {
                             inputRef.current?.focus()
                         }

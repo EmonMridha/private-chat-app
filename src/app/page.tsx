@@ -46,14 +46,13 @@ export default function Home() {
     }
   })
 
-  // use mutate returns something like this  {
-  //   mutate: function,
+  // useMutation returns something like this  {
+  //   mutate: function I gave in mutationFn,
   //   isPending: false,
   //   isSuccess: false,
   //   isError: false,
   //   ...
   // }
-
 
   return <main className="flex min-h-screen flex-col items-center justify-center p-4">
     <div className="w-full max-w-full space-y-8">

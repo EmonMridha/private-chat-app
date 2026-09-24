@@ -11,7 +11,7 @@ const rooms = new Elysia({ prefix: '/room' })
 
         // Storing data in redis under a meta
         await redis.hset(`meta:${roomId}`, {
-            connected: ['Emon'],
+            connected: [],
             createdAt: Date.now(),
         })
 
