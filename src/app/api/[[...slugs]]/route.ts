@@ -11,7 +11,7 @@ const rooms = new Elysia({ prefix: '/room' })
     .post('/create', async () => {
         const roomId = nanoid() // creating a roomId
 
-        // Storing data in redis under a meta
+        // Creating a new room in redis under a meta
         await redis.hset(`meta:${roomId}`, {
             connected: [],
             createdAt: Date.now(),
@@ -35,8 +35,6 @@ const messages = new Elysia({ prefix: "/messages" }).use(authMiddleware).post('/
         if (!roomExists) {
             throw new Error("Room Does not exists")
         }
-
-
     },
     {
         query: z.object({ roomId: z.string() }),

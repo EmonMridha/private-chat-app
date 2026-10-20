@@ -13,6 +13,7 @@ const generateUserName = () => {
   const word = ANIMALS[Math.floor(Math.random() * ANIMALS.length)]
   return `anonymous-${word}-${nanoid(5)}`
 }
+
 export default function Home() {
 
   const [userName, setUserName] = useState('');
@@ -21,7 +22,7 @@ export default function Home() {
 
   useEffect(() => {
     const main = () => {
-      const stored = localStorage.getItem(STORAGE_KEY)
+      const stored = localStorage.getItem(STORAGE_KEY) 
 
       if (stored) {
         setUserName(stored)
@@ -29,7 +30,7 @@ export default function Home() {
       }
 
       const generated = generateUserName()
-      localStorage.setItem(STORAGE_KEY, generated)
+      localStorage.setItem(STORAGE_KEY, generated) // setting new generated username to local storage
       setUserName(generated)
     }
 

@@ -4,7 +4,7 @@ import Elysia from "elysia"
 class AuthError extends Error {
     constructor(message: string) {
         super(message)
-        this.name = "AuhError"
+        this.name = "AuthError"
     }
 }
 

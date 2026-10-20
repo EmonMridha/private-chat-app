@@ -11,9 +11,9 @@ export const proxy = async (req: NextRequest) => {
 
     if (!roomMatch) return NextResponse.redirect(new URL('/', req.url))
 
-    const roomId = roomMatch[1]
+    const roomId = roomMatch[1] // getting the roomId from the url
 
-    // getting the meta data from redis under roomId
+    // retrieve the meta data from redis under roomId
     const meta = await redis.hgetall<{
         connected: string[];
         createAt: number
@@ -25,7 +25,7 @@ export const proxy = async (req: NextRequest) => {
 
     const existingToken = req.cookies.get('x-auth-token')?.value // getting the token from the cookie if it exists
 
-    // User is allowed to join room
+    // this is for after the user has already joined the room and is trying to refresh the page
     if (existingToken && meta.connected.includes(existingToken)) {
         return NextResponse.next()
     }
@@ -36,7 +36,7 @@ export const proxy = async (req: NextRequest) => {
 
     const response = NextResponse.next()
 
-    const token = nanoid()
+    const token = nanoid() // creating a new token for the new user to join the room
 
     // setting new token in cookie
     response.cookies.set('x-auth-token', token,
@@ -48,6 +48,7 @@ export const proxy = async (req: NextRequest) => {
         }
     )
 
+    // adding the new token to the redis
     await redis.hset(`meta:${roomId}`, {
         connected: [...meta.connected, token]
     })
