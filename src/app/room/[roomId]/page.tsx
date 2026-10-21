@@ -1,5 +1,8 @@
 'use client'
 
+import { useUsername } from "@/hooks/use-username"
+import { client } from "@/lib/client"
+import { useMutation } from "@tanstack/react-query"
 import { useParams } from "next/navigation"
 import { useRef, useState } from "react"
 
@@ -12,13 +15,34 @@ const formatTimeRemaining = (seconds: number) => {
 const Page = () => {
 
     const params = useParams()
-    const roomId = params.roomId
+    const roomId = params.roomId as string
 
+    const { username } = useUsername();
     const [input, setInput] = useState('')
     const inputRef = useRef<HTMLInputElement>(null)
 
     const [copyStatus, setCopyStatus] = useState('Copy')
     const [timeRemaining, setTimeRemaining] = useState<number | null>(51)
+
+    const { mutate: sendMessage, isPending } = useMutation({
+        mutationFn: async ({ text }: { text: string }) => {
+            const response = await client.messages.post(
+                { sender: username, text },
+                { query: { roomId } }
+            )
+
+            console.log("Message response:", response)
+            return response
+        },
+
+        onSuccess: (data) => {
+            console.log("Message sent successfully:", data)
+        },
+
+        onError: (error) => {
+            console.error("Failed to send message:", error)
+        }
+    })
 
     const copyLink = () => {
         const url = window.location.href
@@ -54,10 +78,6 @@ const Page = () => {
             </button>
         </header>
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin">
-
-        </div>
-
         <div className="p-4 border-t border-zinc-800 bg-zinc-900/30">
             <div className="flex gap-4">
                 <div className="flex-1 relative group">
@@ -66,12 +86,18 @@ const Page = () => {
                     </span>
                     <input ref={inputRef} value={input} onKeyDown={(e) => {
                         if (e.key === "Enter" && input.trim()) {
+                            sendMessage({ text: input })
                             inputRef.current?.focus()
                         }
                     }} placeholder="Type message..." onChange={(e) => setInput(e.target.value)} autoFocus type="text" className="w-full bg-black border border-zinc-800 focus:border-zinc-700 focus:outline-none transition-colors text-zinc-100 placeholder:text-zinc-700 py-3 pl-8 pr-4 text-sm" />
                 </div>
 
-                <button className="bg-zinc-800 text-zinc-400 px-6 text-sm font-bold hover:text-zinc-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer uppercase">Send</button>
+                <button onClick={() => {
+                    sendMessage({ text: input })
+                    inputRef.current?.focus()
+                }}
+                    disabled={!input.trim() || isPending}
+                    className="bg-zinc-800 text-zinc-400 px-6 text-sm font-bold hover:text-zinc-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer uppercase">Send</button>
             </div>
         </div>
     </main>
