@@ -2,7 +2,7 @@
 
 import { useUsername } from "@/hooks/use-username"
 import { client } from "@/lib/client"
-import { useMutation } from "@tanstack/react-query"
+import { useMutation, useQuery } from "@tanstack/react-query"
 import { useParams } from "next/navigation"
 import { useRef, useState } from "react"
 
@@ -23,6 +23,16 @@ const Page = () => {
 
     const [copyStatus, setCopyStatus] = useState('Copy')
     const [timeRemaining, setTimeRemaining] = useState<number | null>(51)
+
+    const { data: messages } = useQuery({
+        queryKey: ['messages', roomId],
+        queryFn: async () => {
+            const res = await client.messages.get({ query: { roomId } })
+            return res.data
+        }
+    })
+
+    console.log("messages",messages);
 
     const { mutate: sendMessage, isPending } = useMutation({
         mutationFn: async ({ text }: { text: string }) => {
@@ -74,6 +84,30 @@ const Page = () => {
                 Destroy Now
             </button>
         </header>
+
+        {/* Messages */}
+
+        <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin">
+            {messages?.messages.length === 0 && (
+                <div className="flex items-center justify-center h-full">
+                    <p className="text-zinc-200 text-sm font-mono">
+                        No messages yet, start the conversation.
+                    </p>
+                </div>
+            )}
+
+            {messages?.messages.map((msg) => (
+                <div key={msg.id} className="flex flex-col items-start">
+                    <div className="max-w-[80%] group">
+                        <div className="flex items-baseline gap-3 mb-1">
+                            <span className={`text-xs font-bold ${msg.sender === username ? "text-green-500" : "text-blue-500"}`}>
+                                {msg.sender === username ? "You" : msg.sender}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            ))}
+        </div>
 
         <div className="p-4 border-t border-zinc-800 bg-zinc-900/30">
             <div className="flex gap-4">
