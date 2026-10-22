@@ -30,9 +30,6 @@ const Page = () => {
                 { sender: username, text },
                 { query: { roomId } }
             )
-
-            console.log("Message response:", response)
-            return response
         },
 
         onSuccess: (data) => {

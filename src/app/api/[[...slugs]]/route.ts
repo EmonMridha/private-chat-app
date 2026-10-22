@@ -22,16 +22,13 @@ const rooms = new Elysia({ prefix: '/room' }).post('/create', async () => {
     return { roomId }
 })
 
-const messages = new Elysia({ prefix: "/messages" }).use(authMiddleware).post('/', async ({ body, auth }) => {
+// things sent from frontend are set in req.body and things returned from authMiddleware are set in req.auth
+const messages = new Elysia({ prefix: "/messages" }).use(authMiddleware).post('/', async (req) => {
 
-    const { sender, text } = body
-    const { roomId } = auth
-
-    console.log("Room ID:", roomId)
+    const { sender, text } = req.body
+    const { roomId } = req.auth
 
     const roomExists = await redis.exists(`meta:${roomId}`)
-
-    console.log("Room exists:", roomExists)
 
     if (!roomExists) {
         throw new Error("Room Does not exists")
@@ -48,15 +45,13 @@ const messages = new Elysia({ prefix: "/messages" }).use(authMiddleware).post('/
     // add message to redis
     const result = await redis.rpush(`messages:${roomId}`, {
         ...message,
-        token: auth.token
+        token: req.auth.token
     })
-
-    console.log("Message added to Redis:", result)
 
     await realtime.channel(roomId).emit('chat.message', message)
 
     // housekeeping
-    const remaining = await redis.ttl(`meta:${roomId}`)
+    const remaining = await redis.ttl(`meta:${roomId}`) // getting the remaining time of the room in seconds
 
     await redis.expire(`messages:${roomId}`, remaining)
     await redis.expire(`history:${roomId}`, remaining)
