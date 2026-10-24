@@ -2,9 +2,11 @@
 
 import { useUsername } from "@/hooks/use-username"
 import { client } from "@/lib/client"
+import { useRealtime } from "@/lib/realtime-client"
 import { useMutation, useQuery } from "@tanstack/react-query"
-import { useParams } from "next/navigation"
-import { useRef, useState } from "react"
+import { format } from "date-fns"
+import { useParams, useRouter } from "next/navigation"
+import { useEffect, useRef, useState } from "react"
 
 const formatTimeRemaining = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
@@ -14,8 +16,10 @@ const formatTimeRemaining = (seconds: number) => {
 
 const Page = () => {
 
+    const bottomRef = useRef<HTMLDivElement>(null)
     const params = useParams()
-    const roomId = params.roomId as string
+    const roomId = params.roomId as string // getting the roomId from the url params
+    const router = useRouter()
 
     const { username } = useUsername();
     const [input, setInput] = useState('')
@@ -24,7 +28,8 @@ const Page = () => {
     const [copyStatus, setCopyStatus] = useState('Copy')
     const [timeRemaining, setTimeRemaining] = useState<number | null>(51)
 
-    const { data: messages } = useQuery({
+    // fetching messages from the server using react-query
+    const { data: messages, refetch } = useQuery({
         queryKey: ['messages', roomId],
         queryFn: async () => {
             const res = await client.messages.get({ query: { roomId } })
@@ -32,7 +37,12 @@ const Page = () => {
         }
     })
 
-    console.log("messages",messages);
+    // useQuery returns an object like this
+    //     {
+    //     data: things returned by queryFn,
+    //     isLoading: false,
+    //     isError: false
+    // }
 
     const { mutate: sendMessage, isPending } = useMutation({
         mutationFn: async ({ text }: { text: string }) => {
@@ -40,6 +50,7 @@ const Page = () => {
                 { sender: username, text },
                 { query: { roomId } }
             )
+            setInput('')
         },
 
         onSuccess: (data) => {
@@ -51,12 +62,32 @@ const Page = () => {
         }
     })
 
+    useRealtime({
+        channels: [roomId],
+        events: ["chat.message", "chat.destroy"],
+        onData: ({ event }) => {
+            if (event === 'chat.message') {
+                refetch()
+            }
+
+            if (event === 'chat.destroy') {
+                alert("This chat has been destroyed.")
+                window.location.href = "/"
+                router.push('/?destroyed=true')
+            }
+        }
+    })
+
     const copyLink = () => {
         const url = window.location.href
         navigator.clipboard.writeText(url)
         setCopyStatus('Copied')
         setTimeout(() => setCopyStatus("Copy"), 2000)
     }
+
+    useEffect(() => {
+        bottomRef.current?.scrollIntoView({ behavior: "smooth" })
+    }, [messages])
 
     return <main className="flex flex-col h-screen max-h-screen overflow-hidden">
         <header className="border-b border-zinc-800 p-4 items-center justify-between bg-zinc-900/30">
@@ -100,13 +131,24 @@ const Page = () => {
                 <div key={msg.id} className="flex flex-col items-start">
                     <div className="max-w-[80%] group">
                         <div className="flex items-baseline gap-3 mb-1">
-                            <span className={`text-xs font-bold ${msg.sender === username ? "text-green-500" : "text-blue-500"}`}>
+
+                            <span className={`text-xs font-bold ${msg.sender === username ? "text-green-500" : "text-blue-800"}`}>
                                 {msg.sender === username ? "You" : msg.sender}
                             </span>
+
+                            <span className="text-[11px] text-zinc-400">
+                                {format(msg.timeStamp, 'HH:mm')}
+                            </span>
                         </div>
+
+                        <p className={`${msg.sender === username ? "text-sm text-zinc-300 leading-relaxed break-all bg-green-800 p-2 rounded-r-4xl" : "text-sm text-zinc-300 leading-relaxed break-all bg-blue-800 p-2 rounded-r-4xl"} `}>
+                            {msg.text}
+                        </p>
                     </div>
                 </div>
             ))}
+
+            <div ref={bottomRef} />
         </div>
 
         <div className="p-4 border-t border-zinc-800 bg-zinc-900/30">
