@@ -30,9 +30,9 @@ const rooms = new Elysia({ prefix: '/room' }).post('/create', async () => {
     await realtime.channel(auth.roomId).emit('chat.destroy', { isDestroyed: true })
     // promise will let all the delete operations run in parallel so that we don't have to wait for each operation to finish.
     await Promise.all([
-        await redis.del(auth.roomId),
-        await redis.del(`meta:${auth.roomId}`),
-        await redis.del(`message:${auth.roomId}`)
+        redis.del(auth.roomId),
+        redis.del(`meta:${auth.roomId}`),
+        redis.del(`message:${auth.roomId}`)
     ])
 
 }, { query: z.object({ roomId: z.string() }) })
