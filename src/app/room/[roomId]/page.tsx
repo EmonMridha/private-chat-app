@@ -26,7 +26,7 @@ const Page = () => {
     const inputRef = useRef<HTMLInputElement>(null)
 
     const [copyStatus, setCopyStatus] = useState('Copy')
-    const [timeRemaining, setTimeRemaining] = useState<number | null>(51)
+    const [timeRemaining, setTimeRemaining] = useState<number | null>(51) // the type means timeRemaining can hold either a number or null
 
     // fetching messages from the server using react-query
     const { data: messages, refetch } = useQuery({
@@ -78,6 +78,12 @@ const Page = () => {
         }
     })
 
+    const { mutate: destroyRoom } = useMutation({
+        mutationFn: async () => {
+            await client.room.delete(null, { query: { roomId } })
+        }
+    })
+
     const copyLink = () => {
         const url = window.location.href
         navigator.clipboard.writeText(url)
@@ -104,11 +110,11 @@ const Page = () => {
 
                 <div className="flex flex-col">
                     <span className="text-xs text-zinc-500 uppercase">Self-Destruct</span>
-                    <span className={`text-sm font-bold flex items-center gap-2 ${timeRemaining !== null && timeRemaining < 60 ? "text-red-500" : "text-amber-500"}`}>{timeRemaining !== null ? formatTimeRemaining(timeRemaining) : "--:--"}</span>
+                    <p className="text-red-500">Note: This chat will be completely destroyed after 10 minutes</p>
                 </div>
             </div>
 
-            <button className="text-xs bg-zinc-800 hover:bg-red-600 py-1.5 px-3 rounded text-zinc-400 hover:text-white font-bold transition-all group flex items-center gap-2 disabled:opacity-50 cursor-pointer">
+            <button onClick={() => destroyRoom()} className="text-xs bg-zinc-800 hover:bg-red-600 py-1.5 px-3 rounded text-zinc-400 hover:text-white font-bold transition-all group flex items-center gap-2 disabled:opacity-50 cursor-pointer">
                 <span className="group-hover:animate-pluse">
                     💣
                 </span>
