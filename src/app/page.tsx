@@ -55,7 +55,7 @@ function Lobby() {
         <h1 className="text-2xl font-bold tracking-tight text-green-500 ">
           {">"}Private_Chat
         </h1>
-        <p className="text-zinc-500 text-sm">Private chat platform developed by Emon Mridha</p>
+        <p className="text-zinc-500 text-sm">Private chat platform developed by <b className="text-shadow-indigo-400">Emon Mridha</b></p>
       </div>
       <div className="border border-zinc-800 bg-zinc-900/50 p-6 backdrop-blur-md">
         <div className="space-y-5 ">
